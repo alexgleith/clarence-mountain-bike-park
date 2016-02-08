@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<html>
+<head>
+    <meta http-equiv="Access-Control-Allow-Origin" content="*">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clarence Mountain Bike Park - Clarence City Council</title>        
+    
+    <link type="text/css" rel="stylesheet" href="src/leaflet.css" />
+    <script type="text/javascript" src="src/leaflet.js"></script>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="src/locate/L.Control.Locate.min.css" />
+    <script src="src/locate/L.Control.Locate.min.js"></script>
+
+    <script src="src/jquery-1.12.0.min.js"></script>
+    <style>
+	    body {
+		    padding: 0;
+		    margin: 0;
+	    }
+	    html, body, #map {
+		    height: 100%;
+	    }
+        h3 {
+            margin:0;
+        }
+        .info-legend {
+            box-shadow: 0 1px 7px rgba(0,0,0,0.65);
+            padding: 2px;
+            background-color: white;            
+            -moz-border-radius: 4px 4px 4px 4px;
+            -webkit-border-radius: 4px 4px 4px 4px;
+                    border-radius: 4px 4px 4px 4px;
+        }
+        /* basic positioning */
+        .legend { list-style: none; padding-left: 10px }
+        .legend li { margin-right: 10px; }
+        .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+        /* your colors */
+        .legend .black { background-color: #000000; }
+        .legend .blue { background-color: #1f45ce; }
+        .legend .green { background-color: #0ac300; }
+        .legend .orange { background-color: #FF6600; }
+    </style>
+</head>
+<body>    
+	<div id="map"></div>
+</body>
+    <script>
+    var center = new L.LatLng(-42.8439, 147.4050);
+    var map = new L.Map('map', { center: center, zoom: 14, attributionControl:true, zoomControl:false, minZoom:11});
+
+    //Define layers
+    var LISTTopographic = new L.tileLayer("https://services.thelist.tas.gov.au/arcgis/rest/services/Basemaps/Topographic/ImageServer/tile/{z}/{y}/{x}", {
+        attribution: "Topographic Basemap from <a href=http://www.thelist.tas.gov.au>the LIST</a> &copy State of Tasmania",
+        maxZoom: 20,
+        maxNativeZoom: 18
+    });
+
+    var LISTAerial = new L.tileLayer("https://services.thelist.tas.gov.au/arcgis/rest/services/Basemaps/Orthophoto/ImageServer/tile/{z}/{y}/{x}", {
+        attribution: "Base Imagery from <a href=http://www.thelist.tas.gov.au>the LIST</a> &copy State of Tasmania",
+        maxZoom: 20,
+        maxNativeZoom: 19
+    });
+
+    var baselayers = {
+        "LIST Aerial Imagery": LISTAerial,
+        "LIST Topographic": LISTTopographic
+    };    
+    map.addLayer(LISTAerial)
+    
+    function getColour(c) {
+        switch(c)
+            {
+            case 'Black Diamond':
+              return '#000000';
+              break;
+            case 'Blue Square':
+              return '#1f45ce';
+              break;
+            case 'Blue Circle':
+              return '#1f45ce';
+              break;
+            case 'Double Black Diamond':
+              return '#d10000';
+            case 'Green Circle':
+              return '#0ac300';
+              break;
+            default:
+              return '#FF6600';
+            }
+    };
+
+    var highlightedFeature = null;
+
+    function highlightOneFeature(e) {
+        if (highlightedFeature) {
+            resetHighlight(highlightedFeature);
+        };
+        var layer = e.target;
+        highlightedFeature = layer;
+        layer.setStyle({
+            fillColor: "yellow",
+            color: "yellow",
+            weight: 5,
+            opacity: 1
+        });
+        if (!L.Browser.ie && !L.Browser.opera) {
+            layer.bringToFront();
+        }
+    }
+    function resetHighlight(layer) {
+        layer.setStyle({
+            fillColor: getColour(layer.feature.properties.IMBA_TDRS),
+            color: getColour(layer.feature.properties.IMBA_TDRS),
+            opacity: 0.8,
+            weight: 4
+        });
+    }
+
+    var mkr = L.marker([-42.85304,147.39292]).addTo(map).bindPopup("<h3>Clarence Mountain Bike Park</h3><a href=https://maps.google.com/maps?daddr=-42.85304,147.39292 target=&quot_blank&quot>Directions to here.</a>").addTo(map);
+    var mtbp = null;
+
+    var district_boundary = new L.geoJson();
+    district_boundary.addTo(map);
+
+    var ajax = $.ajax({
+        url : "ccc_mtbp.geojson",
+        dataType : 'json',
+        success : function (response) {
+            mtbp = L.geoJson(response, {
+                style: function (feature) {
+                    return {
+                        stroke: true,
+                        color: getColour(feature.properties.IMBA_TDRS),
+                        opacity: 0.8,
+                        weight: 4
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    popupOptions = {maxWidth: 200};
+                    layer.bindPopup("<h3>" + feature.properties.TRACK_NAME + "</h3>" +
+                        "<b>Difficulty: </b>" + feature.properties.IMBA_TDRS +
+                        "<br><b>Description: </b>" + feature.properties.TRACK_NAME
+                        ,popupOptions);
+                    layer.on({
+                        click: highlightOneFeature
+                });
+                }
+            }).addTo(map);
+        }
+    });
+    map.attributionControl.addAttribution("Data &copy <a href=http:///ccc.tas.gov.au>ccc</a>.");
+    
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info-legend');
+        div.innerHTML = '<ul class="legend">\
+            <li><span class="black"></span> Black Diamond</li>\
+            <li><span class="blue"></span> Blue Circle/Square</li>\
+            <li><span class="green"></span> Green Circle</li>\
+            <li><span class="orange"></span> Other</li>\
+        </ul>'
+        return div;
+    };
+    legend.addTo(map);
+    map.on('click', function(e) { 
+        if(highlightedFeature){
+            resetHighlight(highlightedFeature);
+        }
+    });
+    //Location control
+    L.control.locate({
+        position: 'topright',  
+        drawCircle: false,
+        follow: false
+    }).addTo(map);
+
+    //Zoom control
+    L.control.zoom().addTo(map);  
+
+    //Layer control
+    L.control.layers(baselayers, [], {position: 'topleft'}).addTo(map);
+
+    </script>
+</html>
