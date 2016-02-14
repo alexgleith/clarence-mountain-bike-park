@@ -144,7 +144,7 @@
                     layer.bindPopup("<h3>" + feature.properties.TRAIL_NAME + "</h3>" +
                         "<b>Section: </b>" + feature.properties.TRACK_NAME +
                         "<br><b>Difficulty: </b>" + feature.properties.IMBA_TDRS +
-                        "<br><b>Description: </b>" + feature.properties.DESCRIPTIO
+                        "<br><b>Description: </b>" + ((feature.properties.DESCRIPTIO) ? feature.properties.DESCRIPTIO : '')
                         ,popupOptions);
                     layer.on({
                         click: highlightOneFeature
