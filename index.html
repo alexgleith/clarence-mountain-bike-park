@@ -141,9 +141,10 @@
                 },
                 onEachFeature: function (feature, layer) {
                     popupOptions = {maxWidth: 200};
-                    layer.bindPopup("<h3>" + feature.properties.TRACK_NAME + "</h3>" +
-                        "<b>Difficulty: </b>" + feature.properties.IMBA_TDRS +
-                        "<br><b>Description: </b>" + feature.properties.TRACK_NAME
+                    layer.bindPopup("<h3>" + feature.properties.TRAIL_NAME + "</h3>" +
+                        "<b>Section: </b>" + feature.properties.TRACK_NAME +
+                        "<br><b>Difficulty: </b>" + feature.properties.IMBA_TDRS +
+                        "<br><b>Description: </b>" + feature.properties.DESCRIPTIO
                         ,popupOptions);
                     layer.on({
                         click: highlightOneFeature
@@ -161,7 +162,7 @@
             <li><span class="black"></span> Black Diamond</li>\
             <li><span class="blue"></span> Blue Circle/Square</li>\
             <li><span class="green"></span> Green Circle</li>\
-            <li><span class="orange"></span> Other</li>\
+            <li><span class="orange"></span> Fire Trail</li>\
         </ul>'
         return div;
     };
